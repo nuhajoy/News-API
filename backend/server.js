@@ -12,12 +12,36 @@ const app = express()
 //   origin: process.env.FRONTEND_URL,
 //   optionsSuccessStatus: 200,
 // };
-// Create a variable to hold our port number
-const port = process.env.PORT;
-// Import the router
+const cors = require("cors");
+const rateLimit = require("express-rate-limit");
+
+const { errorHandler, notFoundHandler } = require("./src/middleware/errorHandler");
+const authRoutes = require("./src/routes/authRoutes");
+const articleRoutes = require("./src/routes/articleRoutes");
+const authorRoutes = require("./src/routes/authorRoutes");
+require("./src/jobs/analyticsJob");
+
+const port = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+});
+
+app.use("/api", apiLimiter);
+
+app.use("/api/auth", authRoutes);
+app.use("/api/articles", articleRoutes);
+app.use("/api/author", authorRoutes);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`Server running on port: ${port}`);
 });
-// Export the webserver for use in the application
+
 module.exports = app;
